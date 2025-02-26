@@ -7,14 +7,23 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const submitHandler = (event) => {
     event.preventDefault()
+      
    
-    setPersons(persons.concat({
+    setPersons(
+      
+      persons.concat({
       name: newName
     }))
     console.log(persons);
+
   }
 
   const handleChange = (event) => {
+    // loop through persons 
+    // dig into object name each time
+    // if object name == event.target.value alert
+   
+
     setNewName(event.target.value)
   }
 
