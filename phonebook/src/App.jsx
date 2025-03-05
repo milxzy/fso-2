@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import axios from 'axios'
+import { useState, useEffect } from 'react'
+import phoneService from './services/phonebook.js'
 
 
 const Search = ({ searchTerm, searchChangeHandler }) => {
@@ -45,27 +47,36 @@ const PhoneForm = ({ submitHandler, newName, handleChange, newPhone, handlePhone
 }
 
 
-  const People = ({ filteredPersons }) => {
+  const People = ({ filteredPersons, deleteHandler }) => {
     return (
       <>
       
       <ul>
         {filteredPersons.map((person, index) => 
-          <li key={index}>{person.name} {person.phone}</li>
+          <li key={index}>{person.name} {person.phone} <button onClick={deleteHandler}>delete</button></li>
         )}
       </ul>
       </>
     )
   }
 
+
+
 const App = () => {
   const [persons, setPersons] = useState([
-    { name: 'Arto Hellas', phone: '040-123456', id: 1 },
-    { name: 'Ada Lovelace', phone: '39-44-5323523', id: 2 },
-    { name: 'Dan Abramov', phone: '12-43-234345', id: 3 },
-    { name: 'Mary Poppendieck', phone: '39-23-6423122', id: 4 }
+    // { name: 'Arto Hellas', phone: '040-123456', id: 1 },
+    // { name: 'Ada Lovelace', phone: '39-44-5323523', id: 2 },
+    // { name: 'Dan Abramov', phone: '12-43-234345', id: 3 },
+    // { name: 'Mary Poppendieck', phone: '39-23-6423122', id: 4 }
   ]); 
 
+
+ useEffect(() => {
+    axios.get('http://localhost:3001/persons')
+    .then( response => {
+      setPersons(response.data)
+    })
+  }, [])
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -83,9 +94,21 @@ const App = () => {
       phone: newPhone
     }));
 
+    console.log(persons)
+
+    const createPerson = phoneService
+    .create({
+      "name": newName,
+      "number": newPhone
+    })
+
     setNewName('');
     setNewPhone('');
   };
+
+  const deleteHandler = () => {
+    console.log('delete')
+  }
 
   const handleChange = (event) => {
     setNewName(event.target.value);
@@ -110,7 +133,7 @@ const App = () => {
       <PhoneForm submitHandler={submitHandler} newName={newName} handleChange={handleChange}
        newPhone={newPhone} handlePhoneChange={handlePhoneChange} />
       <h2>Numbers</h2>
-      <People  filteredPersons={filteredPersons}/>
+      <People  filteredPersons={filteredPersons} deleteHandler={deleteHandler}/>
     </div>
   );
 };
