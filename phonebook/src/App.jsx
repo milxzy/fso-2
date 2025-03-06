@@ -53,7 +53,7 @@ const PhoneForm = ({ submitHandler, newName, handleChange, newPhone, handlePhone
       
       <ul>
         {filteredPersons.map((person, index) => 
-          <li key={index}>{person.name} {person.phone} <button onClick={deleteHandler}>delete</button></li>
+          <li key={index}>{person.name} {person.phone} <button onClick={() => deleteHandler(person.name, person.id)}>delete</button></li>
         )}
       </ul>
       </>
@@ -84,8 +84,21 @@ const App = () => {
   const submitHandler = (event) => {
     event.preventDefault();
 
-    if (persons.some(person => person.name === newName)) {
-      alert(`${newName} is already added to phonebook`);
+    const existingPerson = persons.find(person => person.name.toLowerCase() === newName.toLowerCase())
+
+    if (existingPerson) {
+      if (window.confirm(`${newName} is already added to phonebook, replace their phone number with a new one?`)) {
+      phoneService.updatePerson(existingPerson.id,
+         {
+          "name": newName,
+          "number": newPhone
+         }
+        )
+      .then((response) => {
+        console.log(response.data)
+      })
+
+      }
       return;
     }
 
@@ -106,9 +119,19 @@ const App = () => {
     setNewPhone('');
   };
 
-  const deleteHandler = () => {
-    console.log('delete')
+  const deleteHandler = (name, id) => {
+    window.confirm(`delete ${name}`)
+    phoneService.deletePerson(id)
+    .then(() => {
+      setPersons(persons.filter(person => person.id !== id))
+    })
+    .catch(error => {
+      alert(`the person ${name} was already deleted from the server`)
+      setPersons(persons.filter(person => person.id !== id))
+    })
+
   }
+
 
   const handleChange = (event) => {
     setNewName(event.target.value);
