@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useState, useEffect } from 'react'
 import phoneService from './services/phonebook.js'
+import './index.css'
 
 
 const Search = ({ searchTerm, searchChangeHandler }) => {
@@ -51,9 +52,36 @@ const PhoneForm = ({ submitHandler, newName, handleChange, newPhone, handlePhone
       
       <ul>
         {filteredPersons.map((person, index) => 
-          <li key={index}>{person.name} {person.phone} <button onClick={() => deleteHandler(person.name, person.id)}>delete</button></li>
+          <li key={index}>{person.name} {person.number} <button onClick={() => deleteHandler(person.name, person.id)}>delete</button></li>
         )}
       </ul>
+      </>
+    )
+  }
+
+
+  const Notification = ({ message }) => {
+    if ( message === null ) {
+      return null
+    }
+
+    const errorStyle = {
+      color: 'red',
+      fontStyle: 'italic',
+      fontSize: 16
+    }
+
+    const goodStyle = {
+      color: 'green',
+      fontStyle: 'italic',
+      fontSize: 16
+    }
+
+    const style = message.status === 'good' ? goodStyle : errorStyle
+
+    return(
+      <>
+      <p style={style}>{message.text}</p>
       </>
     )
   }
@@ -67,12 +95,17 @@ const App = () => {
     // { name: 'Dan Abramov', phone: '12-43-234345', id: 3 },
     // { name: 'Mary Poppendieck', phone: '39-23-6423122', id: 4 }
   ]); 
+  const [message, setMessage] = useState({
+
+  })
 
 
  useEffect(() => {
     axios.get('http://localhost:3001/persons')
     .then( response => {
       setPersons(response.data)
+      console.log(response.data)
+      
     })
   }, [])
   const [newName, setNewName] = useState('');
@@ -92,8 +125,11 @@ const App = () => {
           "number": newPhone
          }
         )
-      .then((response) => {
-        console.log(response.data)
+      .catch(() => {
+        setMessage({
+          text: `Info of ${newName} has already been deleted from the server`,
+          status: 'bad'
+        })
       })
 
       }
@@ -112,7 +148,13 @@ const App = () => {
       "name": newName,
       "number": newPhone
     })
-
+    setMessage({
+    text:  `Added ${newName}`,
+    status: 'good'
+    })
+    setTimeout(() => {
+      setMessage(null)
+    }, 5000)
     setNewName('');
     setNewPhone('');
   };
@@ -154,6 +196,7 @@ const App = () => {
       <PhoneForm submitHandler={submitHandler} newName={newName} handleChange={handleChange}
        newPhone={newPhone} handlePhoneChange={handlePhoneChange} />
       <h2>Numbers</h2>
+      <Notification message={message}/>
       <People  filteredPersons={filteredPersons} deleteHandler={deleteHandler}/>
     </div>
   );
