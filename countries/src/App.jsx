@@ -19,17 +19,17 @@ export const ListBlock = ({ filteredItems }) => {
   )
 }
 
-export const InfoBlock = ({ country }) => {
+export const InfoBlock = ({ country, filteredItems }) => {
   const [loading, setLoading] = useState(false)
-
+  const [countryInfo, setCountryInfo] = useState([])
 
   useEffect(() => {
     console.log('info')
-    setLoading(true)
+    console.log(filteredItems)
 
     const fetchData = async () => {
 
-      const url = `https://studies.cs.helsinki.fi/restcountries/api/name/${country}`
+      const url = `https://studies.cs.helsinki.fi/restcountries/api/name/${filteredItems}`
       try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -37,17 +37,25 @@ export const InfoBlock = ({ country }) => {
         }
         const json = await response.json()
         console.log(json)
+        setCountryInfo(json)
       } catch (error) {
         console.error(error)
       }
     }
     fetchData()
-  })
+  }, [country])
 
 
   return (
     <>
-
+      {loading ? <div> ... </div> : (
+        <div>
+          <h2>{countryInfo.name?.common}</h2>
+          <p>Capital: {countryInfo.capital?.[0] || 'N/A'}</p>
+          <p>Population: {countryInfo.capital?.[0] || 'N/A'}</p>
+          <img src={countryInfo.flags?.svg} width="150" />
+        </div>
+      )}
     </>
   )
 }
@@ -95,17 +103,16 @@ function App() {
 
 
 
-
   return (
     <>
       <label htmlFor="country-name" > Country:  </label>
       <input type="text" name="country-name" id="" onChange={handleChange} />
 
-
       {
-        filteredItems.length === 1 ? <InfoBlock country={inputValue} /> : <ListBlock filteredItems={filteredItems} />
+        filteredItems.length === 1 ? < InfoBlock country={filteredItems[0]} filteredItems={filteredItems} /> : <ListBlock filteredItems={filteredItems} />
 
       }
+
       {/* country list block */}
       {/* <ListBlock filteredItems={filteredItems} /> */}
       {/* country INFO block */}
