@@ -1,35 +1,28 @@
 import { useState, useEffect } from 'react'
 
-
-
-
-
-
-export const ListBlock = ({ filteredItems }) => {
+export const ListBlock = ({ filteredItems, onCountrySelect }) => {
   return (
-    // limit to 10
-    // 
-
     <ul>
       {filteredItems.map((item, index) => (
-        <li key={index}>{item}</li>
+        <li key={index}>
+          {item}
+          <button onClick={() => onCountrySelect(item)}>Show</button>
+        </li>
       ))}
     </ul>
-
   )
 }
 
-export const InfoBlock = ({ country, filteredItems }) => {
+export const InfoBlock = ({ country }) => {
   const [loading, setLoading] = useState(false)
-  const [countryInfo, setCountryInfo] = useState([])
+  const [countryInfo, setCountryInfo] = useState(null)
 
   useEffect(() => {
-    console.log('info')
-    console.log(filteredItems)
-
     const fetchData = async () => {
+      if (!country) return;
 
-      const url = `https://studies.cs.helsinki.fi/restcountries/api/name/${filteredItems}`
+      setLoading(true)
+      const url = `https://studies.cs.helsinki.fi/restcountries/api/name/${country}`
       try {
         const response = await fetch(url);
         if (!response.ok) {
@@ -40,42 +33,37 @@ export const InfoBlock = ({ country, filteredItems }) => {
         setCountryInfo(json)
       } catch (error) {
         console.error(error)
+      } finally {
+        setLoading(false)
       }
     }
+
     fetchData()
   }, [country])
 
+  if (loading || !countryInfo) return <div>Loading...</div>
 
   return (
-    <>
-      {loading ? <div> ... </div> : (
-        <div>
-          <h2>{countryInfo.name?.common}</h2>
-          <p>Capital: {countryInfo.capital?.[0] || 'N/A'}</p>
-          <p>Population: {countryInfo.capital?.[0] || 'N/A'}</p>
-          <img src={countryInfo.flags?.svg} width="150" />
-        </div>
-      )}
-    </>
+    <div>
+      <h2>{countryInfo.name?.common}</h2>
+      <p>Capital: {countryInfo.capital?.[0] || 'N/A'}</p>
+      <p>Population: {countryInfo.population?.toLocaleString() || 'N/A'}</p>
+      <img src={countryInfo.flags?.svg} width="150" />
+    </div>
   )
 }
-
 
 function App() {
   const [inputValue, setInputValue] = useState("");
   const [countries, setCountries] = useState([])
+  const [selectedCountry, setSelectedCountry] = useState(null)
 
   useEffect(() => {
-    console.log('firing')
     const fetchData = async () => {
-
       const url = "https://studies.cs.helsinki.fi/restcountries/api/all"
       try {
         const response = await fetch(url);
         const json = await response.json();
-
-        console.log(json)
-        // loop through json i.name.common
         setCountries(json.map((country) => country.name.common))
       }
       catch (error) {
@@ -87,38 +75,36 @@ function App() {
 
   const handleChange = (event) => {
     setInputValue(event.target.value)
-    console.log(event.target.value)
+    setSelectedCountry(null) // clear selected country when typing
   }
 
   const filteredItems = countries
     .filter((item) => item.toLowerCase().includes(inputValue.toLowerCase()))
     .slice(0, 10)
 
-
-  // if filteredItems length === 1, display info block, set loading state, make api call, display data
-
-  // 
-
-
-
-
-
   return (
     <>
-      <label htmlFor="country-name" > Country:  </label>
-      <input type="text" name="country-name" id="" onChange={handleChange} />
+      <label htmlFor="country-name">Country:</label>
+      <input
+        type="text"
+        name="country-name"
+        onChange={handleChange}
+        value={inputValue}
+      />
 
-      {
-        filteredItems.length === 1 ? < InfoBlock country={filteredItems[0]} filteredItems={filteredItems} /> : <ListBlock filteredItems={filteredItems} />
-
-      }
-
-      {/* country list block */}
-      {/* <ListBlock filteredItems={filteredItems} /> */}
-      {/* country INFO block */}
-      {/* <InfoBlock /> */}
+      {filteredItems.length === 1 && !selectedCountry ? (
+        <InfoBlock country={filteredItems[0]} />
+      ) : selectedCountry ? (
+        <InfoBlock country={selectedCountry} />
+      ) : (
+        <ListBlock
+          filteredItems={filteredItems}
+          onCountrySelect={setSelectedCountry}
+        />
+      )}
     </>
   )
 }
 
 export default App
+
